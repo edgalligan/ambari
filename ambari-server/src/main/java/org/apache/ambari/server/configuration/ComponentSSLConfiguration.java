@@ -26,98 +26,133 @@ package org.apache.ambari.server.configuration;
  */
 public class ComponentSSLConfiguration {
 
-  /**
-   * Configuration
-   */
-  private String truststorePath;
-  private String truststorePassword;
-  private String truststoreType;
-  private boolean gangliaSSL;
+	/**
+	 * Configuration
+	 */
+	private String truststorePath;
+	private String truststorePassword;
+	private String truststoreType;
+	private String keystorePath;
+	private String keystorePassword;
+	private String keystoreType;
+	private boolean gangliaSSL;
+	private boolean ambariMetricsSSL;
 
-  /**
-   * The singleton.
-   */
-  private static ComponentSSLConfiguration singleton = new ComponentSSLConfiguration();
+	/**
+	 * The singleton.
+	 */
+	private static ComponentSSLConfiguration singleton = new ComponentSSLConfiguration();
 
+	// ----- Constructors ------------------------------------------------------
 
-  // ----- Constructors ------------------------------------------------------
+	/**
+	 * Singleton constructor.
+	 */
+	protected ComponentSSLConfiguration() {
+	}
 
-  /**
-   * Singleton constructor.
-   */
-  protected ComponentSSLConfiguration() {
-  }
+	// ----- ComponentSSLConfiguration -----------------------------------------
 
+	/**
+	 * Initialize with the given configuration.
+	 *
+	 * @param configuration
+	 *            the configuration
+	 */
+	public void init(Configuration configuration) {
+		truststorePath = configuration.getProperty(Configuration.SSL_TRUSTSTORE_PATH_KEY);
+		truststorePassword = getPassword(configuration, Configuration.SSL_TRUSTSTORE_PASSWORD_KEY);
+		truststoreType = configuration.getProperty(Configuration.SSL_TRUSTSTORE_TYPE_KEY);
+		keystorePath = configuration.getProperty(Configuration.SSL_KEYSTORE_PATH_KEY);
+		keystorePassword = getPassword(configuration, Configuration.SSL_KEYSTORE_PASSWORD_KEY);
+		keystoreType = configuration.getProperty(Configuration.SSL_KEYSTORE_TYPE_KEY);
+		gangliaSSL = Boolean.parseBoolean(configuration.getProperty(Configuration.GANGLIA_HTTPS_KEY));
+		ambariMetricsSSL = Boolean.parseBoolean(configuration.getProperty(Configuration.AMBARI_METRICS_HTTPS_KEY));
+	}
 
-  // ----- ComponentSSLConfiguration -----------------------------------------
+	// ----- accessors ---------------------------------------------------------
 
-  /**
-   * Initialize with the given configuration.
-   *
-   * @param configuration  the configuration
-   */
-  public void init(Configuration configuration) {
-    truststorePath     = configuration.getProperty(Configuration.SSL_TRUSTSTORE_PATH_KEY);
-    truststorePassword = getPassword(configuration);
-    truststoreType     = configuration.getProperty(Configuration.SSL_TRUSTSTORE_TYPE_KEY);
-    gangliaSSL         = Boolean.parseBoolean(configuration.getProperty(Configuration.GANGLIA_HTTPS_KEY));
-  }
+	/**
+	 * Get the truststore path.
+	 *
+	 * @return the truststore path
+	 */
+	public String getTruststorePath() {
+		return truststorePath;
+	}
 
+	/**
+	 * Get the truststore password.
+	 *
+	 * @return the truststore password
+	 */
+	public String getTruststorePassword() {
+		return truststorePassword;
+	}
 
-  // ----- accessors ---------------------------------------------------------
+	/**
+	 * Get the truststore type.
+	 *
+	 * @return the truststore type; may be null
+	 */
+	public String getTruststoreType() {
+		return truststoreType;
+	}
 
-  /**
-   * Get the truststore path.
-   *
-   * @return the truststore path
-   */
-  public String getTruststorePath() {
-    return truststorePath;
-  }
+	/**
+	 * @return the keystorePath
+	 */
+	public String getKeystorePath() {
+		return keystorePath;
+	}
 
-  /**
-   * Get the truststore password.
-   *
-   * @return the truststore password
-   */
-  public String getTruststorePassword() {
-    return truststorePassword;
-  }
+	/**
+	 * @return the keystorePassword
+	 */
+	public String getKeystorePassword() {
+		return keystorePassword;
+	}
 
-  /**
-   * Get the truststore type.
-   *
-   * @return the truststore type; may be null
-   */
-  public String getTruststoreType() {
-    return truststoreType;
-  }
+	/**
+	 * @return the keystoreType
+	 */
+	public String getKeystoreType() {
+		return keystoreType;
+	}
 
-  /**
-   * Indicates whether or not Ganglia is setup for SSL.
-   *
-   * @return true if Ganglia is setup for SSL
-   */
-  public boolean isGangliaSSL() {
-    return gangliaSSL;
-  }
+	/**
+	 * Indicates whether or not Ganglia is setup for SSL.
+	 *
+	 * @return true if Ganglia is setup for SSL
+	 */
+	public boolean isAmbariMetricsSSL() {
+		return ambariMetricsSSL;
+	}
 
-  /**
-   * Get the singleton instance.
-   *
-   * @return the singleton instance
-   */
-  public static ComponentSSLConfiguration instance() {
-    return singleton;
-  }
+	/**
+	 * Indicates whether or not Ganglia is setup for SSL.
+	 *
+	 * @return true if Ganglia is setup for SSL
+	 */
+	public boolean isGangliaSSL() {
+		return gangliaSSL;
+	}
 
+	/**
+	 * Get the singleton instance.
+	 *
+	 * @return the singleton instance
+	 */
+	public static ComponentSSLConfiguration instance() {
+		return singleton;
+	}
 
-  // -----helper methods -----------------------------------------------------
+	// -----helper methods -----------------------------------------------------
 
-  private String getPassword(Configuration configuration) {
-    String rawPassword = configuration.getProperty(Configuration.SSL_TRUSTSTORE_PASSWORD_KEY);
-    String password    = configuration.readPasswordFromStore(rawPassword);
+	private String getPassword(Configuration configuration, String property) {
+		String rawPassword = configuration.getProperty(property);
+		String password = configuration.readPasswordFromStore(rawPassword);
 
-    return password == null ? rawPassword : password;
-  }
+		return password == null ? rawPassword : password;
+	}
 }

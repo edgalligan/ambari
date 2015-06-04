@@ -20,8 +20,10 @@ limitations under the License.
 
 import logging
 import string
+import httplib
+import urllib2
 
-from urllib2 import BaseHandler
+from urllib2 import BaseHandler,HTTPSHandler
 from urlparse import urlparse
 from urlparse import urlunparse
 from urlparse import ParseResult
@@ -115,3 +117,18 @@ class RefreshHeaderProcessor(BaseHandler):
 
     # return the original response
     return response
+
+class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    def __init__(self, cert, key):
+        urllib2.HTTPSHandler.__init__(self)
+        self.key = key
+        self.cert = cert
+
+    def https_open(self, req):
+        # Rather than pass in a reference to a connection class, we pass in
+        # a reference to a function which, for all intents and purposes,
+        # will behave as a constructor
+        return self.do_open(self.getConnection, req)
+
+    def getConnection(self, host, timeout=300):
+        return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert, timeout=timeout)

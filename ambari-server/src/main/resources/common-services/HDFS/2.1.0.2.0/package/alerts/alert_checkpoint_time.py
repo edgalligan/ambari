@@ -22,6 +22,8 @@ import time
 import urllib2
 import json
 
+from ambari_commons.urllib_handlers import HTTPSClientAuthHandler
+
 LABEL = 'Last Checkpoint: [{h} hours, {m} minutes, {tx} transactions]'
 
 NN_HTTP_ADDRESS_KEY = '{{hdfs-site/dfs.namenode.http-address}}'
@@ -133,7 +135,8 @@ def get_value_from_jmx(query, jmx_property):
   response = None
   
   try:
-    response = urllib2.urlopen(query)
+    opener = urllib2.build_opener(HTTPSClientAuthHandler("/opt/hadoop/keys/server/cert.pem", "/opt/hadoop/keys/server/cert.pem"))
+    response = opener.open(query)
     data = response.read()
 
     data_dict = json.loads(data)

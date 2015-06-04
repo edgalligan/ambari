@@ -28,6 +28,7 @@ import uuid
 
 from  tempfile import gettempdir
 from alerts.base_alert import BaseAlert
+from ambari_commons.urllib_handlers import HTTPSClientAuthHandler
 from collections import namedtuple
 from resource_management.libraries.functions.get_port_from_url import get_port_from_url
 from resource_management.libraries.functions import get_kinit_path
@@ -199,9 +200,15 @@ class WebAlert(BaseAlert):
         start_time = time.time()
 
         try:
-          curl = subprocess.Popen(['curl', '--negotiate', '-u', ':', '-b', cookie_file, '-c', cookie_file, '-sL', '-w',
-            '%{http_code}', url, '--connect-timeout', CURL_CONNECTION_TIMEOUT,
-            '-o', '/dev/null'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=kerberos_env)
+          curl_array = ['curl', '-k', '--negotiate', '-u', ':', '-b', cookie_file, '-c', cookie_file, '-sL', '-w',
+            '%{http_code}', url, '--connect-timeout', CURL_CONNECTION_TIMEOUT, '-o', '/dev/null']
+          
+          if self.uri_property_keys.client_cert is not None:
+            curl_array.extend(['--cert', self._get_configuration_value(self.uri_property_keys.client_cert)])
+          if self.uri_property_keys.client_key is not None:
+            curl_array.extend(['--key', self._get_configuration_value(self.uri_property_keys.client_key)])
+
+          curl = subprocess.Popen(curl_array, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=kerberos_env)
 
           curl_stdout, curl_stderr = curl.communicate()
         finally:
@@ -243,7 +250,15 @@ class WebAlert(BaseAlert):
     start_time = time.time()
 
     try:
-      response = urllib2.urlopen(url, timeout=CONNECTION_TIMEOUT)
+      if self.uri_property_keys.client_cert is not None:
+        client_cert = self._get_configuration_value(self.uri_property_keys.client_cert)
+        client_key = self._get_configuration_value(self.uri_property_keys.client_key)
+        if(client_key is None):
+          client_key = client_cert
+        opener = urllib2.build_opener(HTTPSClientAuthHandler(client_cert, client_key))
+        response = opener.open(url)
+      else:
+        response = urllib2.urlopen(url)
       response_code = response.getcode()
       time_millis = time.time() - start_time
 

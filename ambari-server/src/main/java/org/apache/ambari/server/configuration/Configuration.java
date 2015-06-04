@@ -181,10 +181,17 @@ public class Configuration {
   public static final String SSL_TRUSTSTORE_PATH_KEY = "ssl.trustStore.path";
   public static final String SSL_TRUSTSTORE_PASSWORD_KEY = "ssl.trustStore.password";
   public static final String SSL_TRUSTSTORE_TYPE_KEY = "ssl.trustStore.type";
+  public static final String SSL_KEYSTORE_PATH_KEY = "ssl.keystore.path";
+  public static final String SSL_KEYSTORE_PASSWORD_KEY = "ssl.keystore.password";
+  public static final String SSL_KEYSTORE_TYPE_KEY = "ssl.keystore.type";
   public static final String JAVAX_SSL_TRUSTSTORE = "javax.net.ssl.trustStore";
   public static final String JAVAX_SSL_TRUSTSTORE_PASSWORD = "javax.net.ssl.trustStorePassword";
   public static final String JAVAX_SSL_TRUSTSTORE_TYPE = "javax.net.ssl.trustStoreType";
+  public static final String JAVAX_SSL_KEYSTORE = "javax.net.ssl.keyStore";
+  public static final String JAVAX_SSL_KEYSTORE_PASSWORD = "javax.net.ssl.keyStorePassword";
+  public static final String JAVAX_SSL_KEYSTORE_TYPE = "javax.net.ssl.keyStoreType";
   public static final String GANGLIA_HTTPS_KEY = "ganglia.https";
+  public static final String AMBARI_METRICS_HTTPS_KEY = "ambari.metrics.https";
   public static final String SRVR_TWO_WAY_SSL_PORT_DEFAULT = "8441";
   public static final String SRVR_ONE_WAY_SSL_PORT_DEFAULT = "8440";
   public static final String SRVR_CRT_NAME_DEFAULT = "ca.crt";
@@ -591,6 +598,23 @@ public class Configuration {
     }
     if (properties.getProperty(SSL_TRUSTSTORE_TYPE_KEY) != null) {
       System.setProperty(JAVAX_SSL_TRUSTSTORE_TYPE, properties.getProperty(SSL_TRUSTSTORE_TYPE_KEY));
+    }
+    
+    String keystorePath = properties.getProperty(SSL_KEYSTORE_PATH_KEY);
+    if(keystorePath != null){
+    	System.setProperty(JAVAX_SSL_KEYSTORE, keystorePath);
+    }
+    
+    String keystorePassword = properties.getProperty(SSL_KEYSTORE_PASSWORD_KEY);
+    if(keystorePassword != null){
+        String ksPassword = readPasswordFromStore(keystorePassword);
+        keystorePassword = ksPassword == null ? keystorePassword : ksPassword;
+        System.setProperty(JAVAX_SSL_KEYSTORE_PASSWORD, keystorePassword);
+    }
+    
+    String keystoreType = properties.getProperty(SSL_KEYSTORE_TYPE_KEY);
+    if(keystoreType != null){
+    	System.setProperty(JAVAX_SSL_KEYSTORE_TYPE, keystoreType);
     }
   }
 

@@ -26,7 +26,7 @@ import urllib2
 import uuid
 
 from alerts.base_alert import BaseAlert
-from ambari_commons.urllib_handlers import RefreshHeaderProcessor
+from ambari_commons.urllib_handlers import RefreshHeaderProcessor,HTTPSClientAuthHandler
 from resource_management.libraries.functions.get_port_from_url import get_port_from_url
 
 logger = logging.getLogger()
@@ -156,7 +156,16 @@ class MetricAlert(BaseAlert):
       # "Refresh" header and attempt to follow the redirect
       response = None
       try:
-        url_opener = urllib2.build_opener(RefreshHeaderProcessor())
+        if self.uri_property_keys.client_cert is not None:
+          client_cert = self._get_configuration_value(self.uri_property_keys.client_cert)
+          client_key = self._get_configuration_value(self.uri_property_keys.client_key)
+          if(client_key is None):
+            client_key = client_cert
+          url_opener = urllib2.build_opener(HTTPSClientAuthHandler(client_cert, client_key),
+                                            RefreshHeaderProcessor())
+        else:
+          url_opener = urllib2.build_opener(RefreshHeaderProcessor())
+          
         response = url_opener.open(url)
         content = response.read()
       finally:

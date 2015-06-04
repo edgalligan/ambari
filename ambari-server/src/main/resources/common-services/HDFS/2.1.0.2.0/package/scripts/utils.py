@@ -21,6 +21,7 @@ import re
 import urllib2
 import json
 
+from ambari_commons.urllib_handlers import RefreshHeaderProcessor,HTTPSClientAuthHandler
 from resource_management import *
 from resource_management.libraries.functions.format import format
 from resource_management.core.shell import call, checked_call
@@ -166,7 +167,7 @@ def service(action=None, name=None, user=None, options="", create_pid_dir=False,
   }
 
   if params.security_enabled and name == "datanode":
-    ## The directory where pid files are stored in the secure data environment.
+    # # The directory where pid files are stored in the secure data environment.
     hadoop_secure_dn_pid_dir = format("{hadoop_pid_dir_prefix}/{hdfs_user}")
     hadoop_secure_dn_pid_file = format("{hadoop_secure_dn_pid_dir}/hadoop_secure_dn.pid")
 
@@ -209,7 +210,7 @@ def service(action=None, name=None, user=None, options="", create_pid_dir=False,
     daemon_cmd = as_user(cmd, user)
      
   service_is_up = check_process if action == "start" else None
-  #remove pid file from dead process
+  # remove pid file from dead process
   File(pid_file,
        action="delete",
        not_if=check_process
@@ -227,8 +228,16 @@ def service(action=None, name=None, user=None, options="", create_pid_dir=False,
 
 def get_value_from_jmx(qry, property):
   try:
-    response = urllib2.urlopen(qry)
-    data = response.read()
+    data = None
+    if encrypted:
+       client_cert = "/opt/hadoop/keys/server/cert.pem"
+       client_key = "/opt/hadoop/keys/server/cert.pem"
+       url_opener = urllib2.build_opener(HTTPSClientAuthHandler(client_cert, client_key),
+                                            RefreshHeaderProcessor())
+       data = url_opener.open(nn_address).read()
+    else:
+       data = urllib2.urlopen(nn_address).read()
+
     if data:
       data_dict = json.loads(data)
       return data_dict["beans"][0][property]
@@ -254,8 +263,18 @@ def get_jmx_data(nn_address, modeler_type, metric, encrypted=False):
 
   nn_address = nn_address + "jmx"
   Logger.info("Retrieve modeler: %s, metric: %s from JMX endpoint %s" % (modeler_type, metric, nn_address))
+  
+  data = None
+  if encrypted:
+    client_cert = "/opt/hadoop/keys/server/cert.pem"
+    client_key = "/opt/hadoop/keys/server/cert.pem"
+    url_opener = urllib2.build_opener(HTTPSClientAuthHandler(client_cert, client_key),
+                                            RefreshHeaderProcessor())
+    data = url_opener.open(nn_address).read()
+  else:
+    data = urllib2.urlopen(nn_address).read()
 
-  data = urllib2.urlopen(nn_address).read()
+
   data_dict = json.loads(data)
   my_data = None
   if data_dict:

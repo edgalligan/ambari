@@ -21,6 +21,8 @@ limitations under the License.
 import urllib2
 import json
 
+from ambari_commons.urllib_handlers import HTTPSClientAuthHandler
+
 RESULT_STATE_OK = 'OK'
 RESULT_STATE_CRITICAL = 'CRITICAL'
 RESULT_STATE_UNKNOWN = 'UNKNOWN'
@@ -88,7 +90,7 @@ def execute(parameters=None, host_name=None):
 
   active_namenodes = []
   standby_namenodes = []
-  unknown_namenodes = []
+  unknown_namenodes = ["TEST"]
 
   # now we have something like 'nn1,nn2,nn3,nn4'
   # turn it into dfs.namenode.[property].[dfs.nameservices].[nn_unique_id]
@@ -163,9 +165,9 @@ def get_value_from_jmx(query, jmx_property):
   response = None
   
   try:
-    response = urllib2.urlopen(query)
+    opener = urllib2.build_opener(HTTPSClientAuthHandler("/opt/hadoop/keys/server/cert.pem", "/opt/hadoop/keys/server/cert.pem"))
+    response = opener.open(query)
     data = response.read()
-
     data_dict = json.loads(data)
     return data_dict["beans"][0][jmx_property]
   finally:

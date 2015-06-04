@@ -21,6 +21,8 @@ limitations under the License.
 import logging
 import re
 import time
+import httplib
+import urllib2
 from collections import namedtuple
 
 logger = logging.getLogger()
@@ -217,6 +219,8 @@ class BaseAlert(object):
     ha_alias_key = None
     ha_http_pattern = None
     ha_https_pattern = None
+    client_cert = None
+    client_key = None
     
     if 'http' in uri_structure:
       http_key = uri_structure['http']
@@ -228,7 +232,14 @@ class BaseAlert(object):
       https_property_key = uri_structure['https_property']
       
     if 'https_property_value' in uri_structure:
-      https_property_value_key = uri_structure['https_property_value']
+      https_property_values = uri_structure['https_property_value'].split(",")
+      values_len = len(https_property_values)
+      https_property_value_key = https_property_values[0]
+      if values_len >= 2:
+        client_cert = https_property_values[1]
+      if values_len == 3:
+        client_key = https_property_values[2]
+      
 
     if 'default_port' in uri_structure:
       default_port = uri_structure['default_port']
@@ -255,15 +266,16 @@ class BaseAlert(object):
         ha_https_pattern = ha['https_pattern']
 
 
-    AlertUriLookupKeys = namedtuple('AlertUriLookupKeys', 
+    AlertUriLookupKeys = namedtuple('AlertUriLookupKeys',
       'http https https_property https_property_value default_port '
-      'kerberos_keytab kerberos_principal '
+      'kerberos_keytab kerberos_principal client_cert client_key '
       'ha_nameservice ha_alias_key ha_http_pattern ha_https_pattern')
     
-    alert_uri_lookup_keys = AlertUriLookupKeys(http=http_key, https=https_key, 
+    alert_uri_lookup_keys = AlertUriLookupKeys(http=http_key, https=https_key,
       https_property=https_property_key,
       https_property_value=https_property_value_key, default_port=default_port,
       kerberos_keytab=kerberos_keytab, kerberos_principal=kerberos_principal,
+      client_cert=client_cert, client_key=client_key,
       ha_nameservice=ha_nameservice, ha_alias_key=ha_alias_key,
       ha_http_pattern=ha_http_pattern, ha_https_pattern=ha_https_pattern
     )
