@@ -265,7 +265,6 @@ public class URLStreamProvider implements StreamProvider {
 	}
 
 	private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException {
-		LOG.info("Keystore Password: " + keystorePassword);
 		if (keystorePath == null || keystoreType == null || keystorePassword == null) {
 			LOG.info("No keystore set since one or more of the following properties were not set: ssl.keystore.path, "
 					+ "ssl.keystore.password, ssl.keystore.type");
@@ -301,7 +300,7 @@ public class URLStreamProvider implements StreamProvider {
 
 	// Get an ssl connection
 	protected HttpsURLConnection getSSLConnection(String spec) throws IOException {
-
+		
 		if (sslSocketFactory == null) {
 			synchronized (this) {
 				if (sslSocketFactory == null) {
